@@ -1,0 +1,143 @@
+#Shell Setup
+
+function relpath () {
+  echo $(basename "$(dirname "`pwd`")")/$(basename "`pwd` ")
+}
+
+function pod_name () {
+	export POD=$(kubectl "--context=${KUBECTL_CONTEXT:-$(kubectl config current-context)}" \
+			${KUBECTL_NAMESPACE/[[:alnum:]-]*/--namespace=${KUBECTL_NAMESPACE}} get pod | \
+			grep $1 | \
+			awk '{print $1}')
+	echo $POD
+}
+
+
+function enable_ktx () {
+	if [ -z "$KTX" ]
+	then
+		KTX=true
+	else
+		KTX=""
+	fi
+}
+
+function k8s_prompt () {
+
+	PROMPT_STRING="$(relpath)"
+	PROMPT_END=" ▻ "
+	if [ -z "$KTX" ]
+	then
+		echo "Nothing to do" > /dev/null
+	else
+		CONTEXT="`kubectl config current-context`"
+		PROMPT_STRING="$PROMPT_STRING ($CONTEXT) @$KUBECTL_NAMESPACE"
+	fi
+	
+	PS1=$PROMPT_STRING$PROMPT_END
+}
+
+function set_namespace () {
+	export KUBECTL_NAMESPACE=$1
+}
+
+export HISTTIMEFORMAT="%d/%m/%y %T "
+PROMPT_COMMAND=k8s_prompt
+PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND ; }"'echo $$ $USER \
+               "$(history 1)" >> ~/.bash_eternal_history'
+
+#SSH Setup
+eval `ssh-agent`
+ssh-add -K ~/.ssh/bitbucket
+ssh-add -K ~/.ssh/mac
+ssh-add -K ~/.ssh/sshkey.pem
+#Aliases
+alias eter="cat /Users/coreyryan/.bash_eternal_history |grep"
+alias hup="/Users/coreyryan/Documents/zume/helm-chart-templates/scripts/chart_upload/chart_upload.sh"
+alias hdr="helm install --dry-run --debug"
+alias remote="/tmp/test.sh"
+
+alias subl="sublime"
+alias hist="history"
+alias g="gcloud"
+alias tf="terraform"
+alias zume="cd ~/Documents/zume"
+alias dcom="docker-compose"
+alias p3="source /Users/coreyryan/Documents/zume/global/global/bin/activate"
+alias tfi="terraform init"
+alias tfa="terraform apply"
+alias tf="terraform"
+alias b64="/Users/coreyryan/b64.sh"
+alias b64d="/Users/coreyryan/b64.sh -d "
+
+alias hm="helmsman"
+alias hma="helmsman --apply"
+alias hmd="helmsman --destroy"
+alias dip="docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'"
+
+## K8S Alias
+
+alias k='kubectl "--context=${KUBECTL_CONTEXT:-$(kubectl config current-context)}" ${KUBECTL_NAMESPACE/[[:alnum:]-]*/--namespace=${KUBECTL_NAMESPACE}}'
+alias ka="k apply"
+alias kl="k logs"
+
+alias kp="k get pods"
+alias ks="k get service"
+alias ki="k get ingress"
+
+alias kd="k describe"
+alias kdp="kd pod"
+alias kds="kd service"
+alias kdi="kd ingress"
+
+alias kps="k get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{\"\n\"}}{{end}}'" #Return just pod names
+
+##	KubeSystem
+alias kpk="kp -n kube-system"
+alias klk="kl -n kube-system"
+alias kdpk="kpd -n kube-system"
+alias kdsk="kpd -n kube-system"
+
+alias ktx="enable_ktx"
+alias kname="set_namespace"
+
+alias pn="pod_name"
+
+alias ctx="kubectx"
+
+#Context alias
+alias apdev="kubectx gke_zume-k8s_us-central1_andpizza-dev"
+alias apstaging="kubectx gke_zume-k8s_us-central1_andpizza-staging"
+alias apperf="kubectx gke_zume-k8s_us-central1_andpizza-perf"
+alias approd="kubectx gke_zume-k8s_us-central1_andpizza-prod"
+
+#IC
+alias icdev="kubectx gke_zume-k8s_us-central1_ironchef-dev"
+
+alias zt="/Users/coreyryan/zt.sh"
+
+#return list of pods mapped to nodes
+alias podtonode="k get pod -o=custom-columns=NODE:.spec.nodeName,NAME:.metadata.name --all-namespaces"
+
+#NVM
+export NVM_DIR=~/.nvm
+source /usr/local/opt/nvm/nvm.sh
+
+export JIRA_USER=
+export JIRA_KEY=
+export JIRA_DEFAULT_PROJECT=SRE
+export KTX=""
+export JFROG_API_KEY=
+export JFROG_USER=
+#Cleanup
+clear
+
+# Zume Bootstrap features
+source ~/.zume_profile.sh
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/coreyryan/google-cloud-sdk/path.bash.inc' ]; then . '/Users/coreyryan/google-cloud-sdk/path.bash.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/coreyryan/google-cloud-sdk/completion.bash.inc' ]; then . '/Users/coreyryan/google-cloud-sdk/completion.bash.inc'; fi
+[[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn
